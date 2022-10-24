@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 using System.IO.Abstractions.TestingHelpers;
+using SolutionCleaner.Enums;
+using SolutionCleaner.Tests.Extensions;
 using Xunit;
 
 namespace SolutionCleaner.Tests
@@ -18,26 +20,36 @@ namespace SolutionCleaner.Tests
             this.projectCleaner = new ProjectCleaner(fileSystem);
         }
 
-        [Fact]
-        public void RemoveVsDirectory_ShouldRemoveVsDirectory_WhenPathIsCorrect()
+        [Theory]
+        [InlineData(EProjectDirectory.Bin)]
+        [InlineData(EProjectDirectory.Obj)]
+        [InlineData(EProjectDirectory.VS)]
+        public void RemoveDirectoryFromProject_ShouldRemoveProjectDirectory_WhenPathIsCorrect(EProjectDirectory projectDir)
         {
             //Arrange
-            var vsFolderFullPath = Path.Combine(projectDirPath, ".vs");
+            string projectDirToRemove = projectDir switch
+            {
+                EProjectDirectory.Bin => @"\bin",
+                EProjectDirectory.Obj => @"\obj",
+                EProjectDirectory.VS => ".vs",
+            };
+            
+            var vsFolderFullPath = Path.Combine(projectDirPath, projectDirToRemove);
 
-            fileSystem.AddDirectory(".vs");
+            fileSystem.AddDirectory(vsFolderFullPath);
 
             //Act
-            projectCleaner.RemoveVsDirectory(projectDirPath);
+            projectCleaner.RemoveDirectoryFromProject(projectDirPath, projectDir);
 
             //Assert
             Assert.False(fileSystem.Directory.Exists(vsFolderFullPath));
         }
-
+        
         [Fact]
-        public void RemoveVsDirectory_ShouldThrowArgumentNullException_WhenProjectDirPathIsNull()
+        public void RemoveProjectDirectory_ShouldThrowArgumentNullException_WhenProjectDirPathIsNull()
         {
             //Assert
-            Assert.Throws<ArgumentNullException>(() => projectCleaner.RemoveVsDirectory(null));
+            Assert.Throws<ArgumentNullException>(() => projectCleaner.RemoveDirectoryFromProject(null, EnumExtensions.RandomEnumValue<EProjectDirectory>()));
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using SolutionCleaner.Enums;
 
 namespace SolutionCleaner.Services
 {
@@ -14,22 +15,18 @@ namespace SolutionCleaner.Services
         {
             this.fileSystem = fileSystem;
         }
-
-        public void RemoveVsDirectory(string projectDirPath)
+        public void RemoveDirectoryFromProject(string projectDirPath, EProjectDirectory projectDir)
         {
-            var vsFolderPath = fileSystem.Path.Combine(projectDirPath, ".vs");
-            fileSystem.Directory.Delete(vsFolderPath, true);
-        }
+            string projectDirName = projectDir switch
+            {
+                EProjectDirectory.Bin => @"\bin",
+                EProjectDirectory.Obj => @"\obj",
+                EProjectDirectory.VS => ".vs",
+                _ => throw new ArgumentOutOfRangeException(nameof(projectDir), projectDir, "Please choose type of project directory!")
+            };
 
-        public void RemoveBinFromProject(string projectDirPath)
-        {
-            var objPath = fileSystem.Path.Combine(projectDirPath, @"\bin");
-            fileSystem.Directory.Delete(objPath, true);
-        }
-
-        public void RemoveObjFromProject(string projectDirPath)
-        {
-            var objPath = fileSystem.Path.Combine(projectDirPath, @"\obj");
+            var objPath = fileSystem.Path.Combine(projectDirPath, projectDirName);
+            
             fileSystem.Directory.Delete(objPath, true);
         }
 
